@@ -128,11 +128,28 @@ outputChannelSize= opt.outputChannelSize
 netG = net.dehaze(inputChannelSize, outputChannelSize, ngf)
 
 
+model_dict = netG.state_dict()
+tmpname = {}
+i=0
+for k, v in model_dict.items():
+    tmpname[i]=k
+    i=i+1
 
-
+i=0
 if opt.netG != '':
-  netG.load_state_dict(torch.load(opt.netG))
-print(netG)
+    state_dict=torch.load(opt.netG)
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = tmpname[i] # update key
+        i=i+1
+        new_state_dict[name] =v
+
+    netG.load_state_dict(new_state_dict)
+
+# if opt.netG != '':
+#   netG.load_state_dict(torch.load(opt.netG))
+# print(netG)
 
 
 
@@ -217,6 +234,9 @@ for epoch in range(1):
         input_cpu, target_cpu, depth_cpu, ato_cpu = data
     elif opt.mode == 'A2B' :
         input_cpu, target_cpu, depth_cpu, ato_cpu = data
+    print(input_cpu.size())
+    print(input_cpu[0][1])
+    vutils.save_image(input_cpu, './DCPCN.png', normalize=True, scale_each=False)
     batch_size = target_cpu.size(0)
     # print(i)
     target_cpu, input_cpu, depth_cpu, ato_cpu = target_cpu.float().cuda(), input_cpu.float().cuda(), depth_cpu.float().cuda(), ato_cpu.float().cuda()
